@@ -3,6 +3,7 @@
 #include <vector>
 #include <climits>
 #include <algorithm>
+#include <fstream>
 using namespace std;
 
 int MATCH, MISMATCH; //replacement costs = 0, 1
@@ -12,6 +13,25 @@ string A, B; // input strings
 vector<int> CC, DD, RR, SS; // 1D arrays for cost calculation
 vector<int> S; // output alignment-mapper
 int Slen; // number of entries in S
+
+string readFasta(string filename){
+    ifstream fin(filename);
+    string line, seq = "";
+    if(!fin){
+        cerr << "Cannot open " << filename << endl;
+        return "";
+    }
+    while(getline(fin, line)){
+        if(line.empty() || line[0] == '>'){
+            continue;
+        }
+        if(line.back() == '\r'){ // Windows line ending
+            line.pop_back();
+        }
+        seq = seq + line;
+    }
+    return seq;
+}
 
 // Cost function
 int w(char a, char b){
@@ -224,7 +244,7 @@ int align(){
     return alignmentCost(Slen);
 }
 
-void display(){
+void display(ostream &out){
     string top = "", mid = "", bot = "";
     int k, t, i = 0, j = 0, op;
     for(k = 0; k < Slen; k++){
@@ -257,27 +277,35 @@ void display(){
             }
         }
     }
-    cout << top << endl << mid << endl << bot << endl;
+    out << top << endl << mid << endl << bot << endl;
 }
 
-int main(){
+int main(int argc, char *argv[]){
     // Example 1 from the paper (mismatch 1, match 0, gap(k) = 2 + 0.5k),
     // But as we are using int, we need to double. So, cost will be 8 instead of 4.
     MATCH = 0;
     MISMATCH = 2; //1
     G = 4; //2
     H = 1; //0.5
+ 
+    A = readFasta(argv[1]);
+    B = readFasta(argv[2]);
 
-    A = "agtac";
-    B = "aag";
 
     int cost = align();
-    cout << "cost is " << cost << endl;
+    // cout << "cost is " << cost << endl;
     cout << "Alignment-mapper:";
     for(int k = 0; k < Slen; k++){
         cout << " " << S[k];
     }
     cout << endl;
-    display();
+
+    ofstream fout(argv[3]);
+
+    fout << "Length A = " << A.size() << ", length B = " << B.size() << endl;
+    fout << "Alignment cost = " << cost << endl << endl;
+    display(fout);
+    fout.close();
+
     return 0;
 }
