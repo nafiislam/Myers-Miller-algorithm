@@ -17,10 +17,7 @@ int Slen; // number of entries in S
 string readFasta(string filename){
     ifstream fin(filename);
     string line, seq = "";
-    if(!fin){
-        cerr << "Cannot open " << filename << endl;
-        return "";
-    }
+
     while(getline(fin, line)){
         if(line.empty() || line[0] == '>'){
             continue;
